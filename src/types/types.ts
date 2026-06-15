@@ -1,4 +1,4 @@
-import type { Mesh, Scene, WebGLRenderer, PerspectiveCamera, Vector2, Raycaster } from "three"
+import type { Mesh, Scene, WebGLRenderer, PerspectiveCamera, Vector2, Raycaster, Group } from "three"
 import type { OrbitControls } from "three/examples/jsm/Addons.js"
 
 
@@ -36,7 +36,8 @@ export interface RoomProps{
     verticesHandles : Mesh[],
     vertexToMove : number | null,
     floor: Mesh | null,
-    walls: Mesh | null
+    walls: Mesh[],
+    build: Group
 }
 
 

@@ -33,7 +33,8 @@ export const room : RoomProps = {
     verticesHandles : [],
     vertexToMove : null,
     floor: null,
-    walls: null
+    walls: [],
+    build: new THREE.Group()
 }
 
 export const actionsPanel = document.querySelector('.actions') as HTMLElement;

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 // import GUI from 'lil-gui';
-import { room, three, splitWallButton } from './store/globalState';
-import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode } from './utils/setup';
+import { room, three, splitWallButton, state } from './store/globalState';
+import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode, updateVisibleFaces } from './utils/setup';
 import { floorMaterial } from './store/meterials';
 import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/interactivity';
 
@@ -69,6 +69,12 @@ const button3d = document.querySelector('#button-3d') as HTMLElement;
 
 button2d.onclick = () => udpateMode('2D');
 button3d.onclick = () => udpateMode('3D');
+
+three.controls.addEventListener('change', () => {
+    if(state.mode === '2D') return;
+
+    updateVisibleFaces()
+})
 
 
 /**
