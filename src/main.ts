@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 // import GUI from 'lil-gui';
-import { room, three } from './store/globalState';
+import { room, three, splitWallButton } from './store/globalState';
 import { createEdgeHandles, createEdges, createVerticesHandles, setupScene } from './utils/setup';
 import { floorMaterial } from './store/meterials';
 import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/interactivity';
@@ -28,6 +28,41 @@ three.scene.add(floor);
 document.addEventListener('mousedown', (event) => mouseDown(event) );
 document.addEventListener('mousemove', (event) => mouseMove(event, floor) );
 document.addEventListener('mouseup', () => mouseUp() );
+
+
+splitWallButton.onclick = () => {
+    const edgeToSplit = room.edgeToMove;
+    const v1 = room.vertices[edgeToSplit?.startIndex!];
+    const v2 = room.vertices[edgeToSplit?.endIndex!];
+
+    const midPoint = new THREE.Vector2((v1!.x + v2!.x)/2, (v1.y + v2.y)/2);
+
+    room.vertices.splice(edgeToSplit?.endIndex!, 0, midPoint);
+
+    console.log('after: ', room);
+
+    // Update vertices Handles
+    room.verticesHandles.forEach(vertexHandle => {
+        vertexHandle.geometry.dispose();
+        vertexHandle.clear();
+        three.scene.remove(vertexHandle);
+    });
+    room.verticesHandles = [];
+    createVerticesHandles();
+
+    // Update Edge data
+    room.edges = [];
+    createEdges();
+
+    // Update Edge Handles
+    room.edgeHandles.forEach(edgeHandle => {
+        edgeHandle.geometry.dispose();
+        edgeHandle.clear();
+        three.scene.remove(edgeHandle);
+    });
+    room.edgeHandles = [];
+    createEdgeHandles();
+}
 
 
 /**

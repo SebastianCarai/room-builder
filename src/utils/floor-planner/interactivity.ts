@@ -18,7 +18,7 @@ function handleActionPanel(event : Event){
         actionsPanel.style.display = 'none';
         state.isActionsPanelActive = false;
         for (let i = 0; i < room.edges.length; i++) {
-        room.edgeHandles[i].material = basicHandleMaterial;
+            room.edgeHandles[i].material = basicHandleMaterial;
         }
         room.edgeToMove = null;
     }
@@ -47,31 +47,31 @@ export function mouseDown(event: MouseEvent){
 
         if(clickedType == 'vertex'){
             room.verticesHandles.forEach((vertexHandle, index) => {
-            if(vertexHandle.userData.id == intersects[0].object.userData.id){
-                three.raycaster.ray.intersectPlane(dragPlane, dragStart);
-        
-                originalStartVertex.copy(room.vertices[index]);
-        
-                three.controls.enablePan = false;
-                state.isDragging = true;
-                room.vertexToMove = index;
-            }
+                if(vertexHandle.userData.id == intersects[0].object.userData.id){
+                    three.raycaster.ray.intersectPlane(dragPlane, dragStart);
+            
+                    originalStartVertex.copy(room.vertices[index]);
+            
+                    three.controls.enablePan = false;
+                    state.isDragging = true;
+                    room.vertexToMove = index;
+                }
             });
         }else if(clickedType == 'edge'){
             room.edges.forEach(edge => {
-            if(edge.id === intersects[0].object.userData.id){
-                
-                three.raycaster.ray.intersectPlane(dragPlane, dragStart);
-        
-                originalStartVertex.copy(room.vertices[edge.startIndex]);
-                originalEndVertex.copy(room.vertices[edge.endIndex]);
-        
-                three.controls.enablePan = false;
-                state.isDragging = true;
-                room.edgeToMove = edge;
+                if(edge.id === intersects[0].object.userData.id){
+                    
+                    three.raycaster.ray.intersectPlane(dragPlane, dragStart);
 
-                room.edgeHandles[room.edgeToMove.handle!].material = activeHandleMaterial;
-            }
+                    originalStartVertex.copy(room.vertices[edge.startIndex]);
+                    originalEndVertex.copy(room.vertices[edge.endIndex]);
+
+                    three.controls.enablePan = false;
+                    state.isDragging = true;
+                    room.edgeToMove = edge;
+
+                    room.edgeHandles[room.edgeToMove.handle!].material = activeHandleMaterial;
+                }
             });
         }
     }
@@ -87,21 +87,23 @@ export function mouseMove(event: MouseEvent, floor: Mesh){
     const intersections = three.raycaster.intersectObjects([...room.edgeHandles, ...room.verticesHandles]);
 
     if(intersections.length > 0){
-    const intersectionType = intersections[0].object.userData.type;
-    const handleId = intersections[0].object.userData.id;
+        const intersectionType = intersections[0].object.userData.type;
+        const handleId = intersections[0].object.userData.id;
 
-    if(intersectionType == 'vertex'){
-        document.body.style.cursor = 'all-scroll';
-    }else{
-        if(room.edges[handleId].direction === 'x'){
-        document.body.style.cursor = 'col-resize';
-        }else if(room.edges[handleId].direction === 'y'){
-        document.body.style.cursor = 'row-resize';
+        if(intersectionType == 'vertex'){
+            document.body.style.cursor = 'all-scroll';
+        }else{
+            if(room.edges[handleId].direction === 'x'){
+                document.body.style.cursor = 'col-resize';
+            }else if(room.edges[handleId].direction === 'y'){
+                document.body.style.cursor = 'row-resize';
+            }
         }
-    }
     }else{
-    document.body.style.cursor = 'default';
+        document.body.style.cursor = 'default';
     }
+
+
     if(!state.isDragging)return
 
     const point = new Vector3();
@@ -130,11 +132,11 @@ export function mouseMove(event: MouseEvent, floor: Mesh){
     room.verticesHandles[room.edgeToMove.endIndex].position.y = room.vertices[room.edgeToMove.endIndex].y;
 
     }else if((room.vertexToMove || room.vertexToMove === 0) && !room.edgeToMove){
-    const deltaX = point.x - dragStart.x;
-    const deltaY = point.y - dragStart.y;
+        const deltaX = point.x - dragStart.x;
+        const deltaY = point.y - dragStart.y;
 
-    room.vertices[room.vertexToMove].x = originalStartVertex.x + deltaX;
-    room.vertices[room.vertexToMove].y = originalStartVertex.y + deltaY;
+        room.vertices[room.vertexToMove].x = originalStartVertex.x + deltaX;
+        room.vertices[room.vertexToMove].y = originalStartVertex.y + deltaY;
     }
     // Recreate floor with new vertices coordinates
     rebuildRoomFloor(floor, room.vertexToMove);
@@ -170,7 +172,7 @@ export function mouseUp(){
  * @param floor 
  * @param vertexToMove 
  */
-function rebuildRoomFloor(floor: Mesh, vertexToMove: number | null){
+export function rebuildRoomFloor(floor: Mesh, vertexToMove: number | null){
 
     // Floor Geometry
     const newShape = new Shape(room.vertices);

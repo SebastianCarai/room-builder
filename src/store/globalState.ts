@@ -34,4 +34,5 @@ export const room : RoomProps = {
 }
 
 export const actionsPanel = document.querySelector('.actions') as HTMLElement;
+export const splitWallButton = document.querySelector('#split-wall') as HTMLElement
 
