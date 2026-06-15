@@ -32,3 +32,12 @@ body
     align-items: center;
     justify-content: center;
 }
+
+.buttons{
+    position: absolute;
+    z-index: 10;
+    top: 1rem;
+    left: 1rem;
+    background-color: white;
+    padding: 0.5rem 1rem;
+}

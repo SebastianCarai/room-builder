@@ -14,6 +14,7 @@ export const three : ThreeScene = {
 }
 
 export const state : State = {
+    mode: '2D',
     isDragging : false,
     isActionsPanelActive : false,
     timerStart : 0
@@ -31,6 +32,8 @@ export const room : RoomProps = {
     edgeToMove : null,
     verticesHandles : [],
     vertexToMove : null,
+    floor: null,
+    walls: null
 }
 
 export const actionsPanel = document.querySelector('.actions') as HTMLElement;

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 // import GUI from 'lil-gui';
 import { room, three, splitWallButton } from './store/globalState';
-import { createEdgeHandles, createEdges, createVerticesHandles, setupScene } from './utils/setup';
+import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode } from './utils/setup';
 import { floorMaterial } from './store/meterials';
 import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/interactivity';
 
@@ -17,16 +17,16 @@ createVerticesHandles();
 // Add floor mesh to the scene
 const shape = new THREE.Shape(room.vertices);
 const floorGeometry = new THREE.ShapeGeometry(shape);
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-three.camera.lookAt(floor.position);
-three.scene.add(floor);
+room.floor = new THREE.Mesh(floorGeometry, floorMaterial);
+three.camera.lookAt(room.floor.position);
+three.scene.add(room.floor);
 
 
 /**
  * Interactivity
  */
 document.addEventListener('mousedown', (event) => mouseDown(event) );
-document.addEventListener('mousemove', (event) => mouseMove(event, floor) );
+document.addEventListener('mousemove', (event) => mouseMove(event) );
 document.addEventListener('mouseup', () => mouseUp() );
 
 
@@ -64,6 +64,12 @@ splitWallButton.onclick = () => {
     createEdgeHandles();
 }
 
+const button2d = document.querySelector('#button-2d') as HTMLElement;
+const button3d = document.querySelector('#button-3d') as HTMLElement;
+
+button2d.onclick = () => udpateMode('2D');
+button3d.onclick = () => udpateMode('3D');
+
 
 /**
  * Animate
@@ -85,11 +91,3 @@ const tick = () =>
 }
 
 tick();
-
-
-
-// const wallsGeometry = new THREE.ExtrudeGeometry(shape, {
-//   depth: 1,
-//   bevelEnabled: false
-// });
-// const walls = new THREE.Mesh(wallsGeometry, defaultMaterial);

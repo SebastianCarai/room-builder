@@ -1,7 +1,7 @@
 import { degToRad } from "three/src/math/MathUtils.js";
 import { actionsPanel, room, state, three } from "../../store/globalState";
 import { activeHandleMaterial, basicHandleMaterial } from "../../store/meterials";
-import { Vector2, Vector3, Plane, Mesh, Shape, ShapeGeometry, PlaneGeometry } from "three";
+import { Vector2, Vector3, Plane, Shape, ShapeGeometry, PlaneGeometry } from "three";
 import { createEdges } from "../setup";
 
 
@@ -78,7 +78,7 @@ export function mouseDown(event: MouseEvent){
 }
 
 
-export function mouseMove(event: MouseEvent, floor: Mesh){
+export function mouseMove(event: MouseEvent){
 
     three.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     three.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -139,7 +139,7 @@ export function mouseMove(event: MouseEvent, floor: Mesh){
         room.vertices[room.vertexToMove].y = originalStartVertex.y + deltaY;
     }
     // Recreate floor with new vertices coordinates
-    rebuildRoomFloor(floor, room.vertexToMove);
+    rebuildRoomFloor(room.vertexToMove);
 }
 
 
@@ -172,12 +172,12 @@ export function mouseUp(){
  * @param floor 
  * @param vertexToMove 
  */
-export function rebuildRoomFloor(floor: Mesh, vertexToMove: number | null){
+export function rebuildRoomFloor(vertexToMove: number | null){
 
     // Floor Geometry
     const newShape = new Shape(room.vertices);
     const newFloorGeometry = new ShapeGeometry(newShape);
-    floor.geometry.dispose();
+    room.floor!.geometry.dispose();
 
 
     createEdges();  
@@ -198,7 +198,7 @@ export function rebuildRoomFloor(floor: Mesh, vertexToMove: number | null){
         room.edgeHandles[index].geometry = newGeo;
     });
 
-    floor.geometry = newFloorGeometry;
+    room.floor!.geometry = newFloorGeometry;
 
 
     if(vertexToMove || vertexToMove === 0){

@@ -1,7 +1,7 @@
 import { degToRad } from "three/src/math/MathUtils.js";
 import { room, three } from "../store/globalState";
 import * as THREE from "three";
-import { basicHandleMaterial } from "../store/meterials";
+import { basicHandleMaterial, floorMaterial } from "../store/meterials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 
@@ -56,10 +56,7 @@ export function setupScene(){
      */
     three.controls = new OrbitControls(three.camera, three.canvas)
     three.controls.enableDamping = true;
-    three.controls.enableRotate = false;
-    three.controls.mouseButtons = {
-        LEFT: THREE.MOUSE.PAN
-    }
+    updateOrbitControls('2D')
 
     /**
      * Renderer
@@ -170,4 +167,59 @@ export function createVerticesHandles(){
         room.verticesHandles.push(sphere);
         three.scene.add(sphere);
     }
+}
+
+
+export function updateOrbitControls(mode: '2D' | '3D'){
+    if(mode === '2D'){
+        three.controls.enableRotate = false;
+        three.controls.mouseButtons = {
+            LEFT: THREE.MOUSE.PAN
+        }
+    }else{
+        three.controls.enableRotate = true;
+        three.controls.mouseButtons = {
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN
+        }
+    }
+}
+
+
+export function udpateMode(mode: '2D' | '3D'){
+    updateOrbitControls(mode);
+
+    if(mode === '3D'){
+        const shape = new THREE.Shape(room.vertices);
+        const wallsGeometry = new THREE.ExtrudeGeometry(shape, {
+            depth: 1,
+            bevelEnabled: false
+        });
+        room.walls = new THREE.Mesh(wallsGeometry, floorMaterial);
+        room.floor!.rotation.x = Math.PI / 2;
+        room.edgeHandles.forEach(edgeHandle => {
+            three.scene.remove(edgeHandle);
+        });
+        room.verticesHandles.forEach(vertexHandle => {
+            three.scene.remove(vertexHandle);
+        });
+
+        room.walls.rotateX(Math.PI / 2)
+        three.scene.add(room.walls);
+        three.camera.position.set(1, 2, 2);
+    }else{
+        room.floor!.rotation.x = 0;
+        three.scene.remove(room.walls as THREE.Object3D);
+        updateOrbitControls(mode);
+        three.camera.position.set(0, 0, 5);
+        three.camera.lookAt(room.floor!.position);
+        room.edgeHandles.forEach(edgeHandle => {
+            three.scene.add(edgeHandle);
+        });
+        room.verticesHandles.forEach(vertexHandle => {
+            three.scene.add(vertexHandle);
+        });
+    }
+    
 }

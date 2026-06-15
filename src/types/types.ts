@@ -13,6 +13,7 @@ export interface ThreeScene{
 }
 
 export interface State{
+    mode: '2D' | '3D',
     isDragging : boolean,
     isActionsPanelActive : boolean,
     timerStart : number
@@ -34,6 +35,8 @@ export interface RoomProps{
     edgeToMove : Edge | null,
     verticesHandles : Mesh[],
     vertexToMove : number | null,
+    floor: Mesh | null,
+    walls: Mesh | null
 }
 
 
