@@ -35,8 +35,8 @@ export function mouseDown(event: MouseEvent){
             room.edgeHandles[i].material = basicHandleMaterial;
         }
     }
-    
-    
+
+
     three.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     three.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     three.raycaster.setFromCamera(three.mouse, three.camera);
@@ -84,7 +84,7 @@ export function mouseMove(event: MouseEvent){
     three.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     three.raycaster.setFromCamera(three.mouse, three.camera);
 
-    const intersections = three.raycaster.intersectObjects([...room.edgeHandles, ...room.verticesHandles]);
+    const intersections = three.raycaster.intersectObjects([...room.edgeHandles, ...room.verticesHandles]);    
 
     if(intersections.length > 0){
         const intersectionType = intersections[0].object.userData.type;
@@ -125,7 +125,7 @@ export function mouseMove(event: MouseEvent){
         room.vertices[room.edgeToMove!.startIndex].y = originalStartVertex.y + deltaY;
         room.vertices[room.edgeToMove!.endIndex].y = originalEndVertex.y + deltaY;
     }
-    
+
     room.verticesHandles[room.edgeToMove.startIndex].position.x = room.vertices[room.edgeToMove.startIndex].x;
     room.verticesHandles[room.edgeToMove.startIndex].position.y = room.vertices[room.edgeToMove.startIndex].y;
     room.verticesHandles[room.edgeToMove.endIndex].position.x = room.vertices[room.edgeToMove.endIndex].x;
@@ -138,6 +138,7 @@ export function mouseMove(event: MouseEvent){
         room.vertices[room.vertexToMove].x = originalStartVertex.x + deltaX;
         room.vertices[room.vertexToMove].y = originalStartVertex.y + deltaY;
     }
+
     // Recreate floor with new vertices coordinates
     rebuildRoomFloor(room.vertexToMove);
 }
@@ -146,7 +147,7 @@ export function mouseMove(event: MouseEvent){
 
 export function mouseUp(){
     const endClick = Date.now();
-    
+
     // It's a click
     if(endClick - state.timerStart < 250){
         // Activate actionsPanel panel
@@ -184,7 +185,7 @@ export function rebuildRoomFloor(vertexToMove: number | null){
 
     room.edges.forEach((edge, index) => {
         edge.handle = index;
-    
+
         const v1 = room.vertices[edge.startIndex];
         const v2 = room.vertices[edge.endIndex];
 

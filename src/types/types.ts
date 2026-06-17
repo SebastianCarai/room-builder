@@ -37,7 +37,8 @@ export interface RoomProps{
     vertexToMove : number | null,
     floor: Mesh | null,
     walls: Mesh[],
-    build: Group
+    build: Group,
+    propToMove: Mesh | null;
 }
 
 

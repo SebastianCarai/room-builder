@@ -4,6 +4,7 @@ import { room, three, splitWallButton, state } from './store/globalState';
 import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode, updateVisibleFaces } from './utils/setup';
 import { floorMaterial } from './store/meterials';
 import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/interactivity';
+import { addCube, clickProp, moveProp, releaseProp } from './utils/room-editing/move';
 
 
 // const gui = new GUI();
@@ -25,9 +26,22 @@ three.scene.add(room.floor);
 /**
  * Interactivity
  */
-document.addEventListener('mousedown', (event) => mouseDown(event) );
-document.addEventListener('mousemove', (event) => mouseMove(event) );
-document.addEventListener('mouseup', () => mouseUp() );
+document.addEventListener('mousedown', (event) =>{
+    if(state.mode === '2D') mouseDown(event)
+        
+    if(state.mode === '3D') clickProp(event)
+});
+document.addEventListener('mousemove', (event) =>{
+    if(state.mode === '2D') mouseMove(event)
+        
+    if(state.mode === '3D') moveProp(event)
+});
+document.addEventListener('mouseup', () =>{
+    if(state.mode === '2D') mouseUp()
+        
+    if(state.mode === '3D') releaseProp()
+});
+
 
 
 splitWallButton.onclick = () => {
@@ -38,8 +52,6 @@ splitWallButton.onclick = () => {
     const midPoint = new THREE.Vector2((v1!.x + v2!.x)/2, (v1.y + v2.y)/2);
 
     room.vertices.splice(edgeToSplit?.endIndex!, 0, midPoint);
-
-    console.log('after: ', room);
 
     // Update vertices Handles
     room.verticesHandles.forEach(vertexHandle => {
@@ -73,8 +85,11 @@ button3d.onclick = () => udpateMode('3D');
 three.controls.addEventListener('change', () => {
     if(state.mode === '2D') return;
 
-    updateVisibleFaces()
-})
+    updateVisibleFaces();
+});
+
+
+addCube();
 
 
 /**
@@ -86,8 +101,10 @@ const tick = () =>
 {
     clock.getDelta();
 
-    // Update controls
-    three.controls.update();
+    if(state.isDragging === false){
+        // Update controls
+        three.controls.update();
+    }
 
     // Render
     three.renderer.render(three.scene, three.camera)

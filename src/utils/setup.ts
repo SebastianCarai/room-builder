@@ -171,6 +171,7 @@ export function createVerticesHandles(){
 }
 
 
+
 export function udpateMode(mode: '2D' | '3D'){
     state.mode = mode;
 
@@ -178,7 +179,6 @@ export function udpateMode(mode: '2D' | '3D'){
 
     // Swicth to 3d mode
     if(mode === '3D'){
-
         createWalls();
 
         room.edgeHandles.forEach(edgeHandle => {
@@ -189,7 +189,6 @@ export function udpateMode(mode: '2D' | '3D'){
         });
 
         room.floor!.rotation.x = Math.PI / 2;
-        room.build.rotateX(Math.PI / 2);
         three.camera.position.set(2, 2, 2);
         
         updateVisibleFaces();
@@ -199,10 +198,13 @@ export function udpateMode(mode: '2D' | '3D'){
     // Switch to 2D mode (floor editing)
     else{
 
+        console.log(three.scene.children);
+        
+
         room.floor!.rotation.x = 0;
-        room.walls.forEach(wall => {
-            three.scene.remove(wall as THREE.Object3D);
-        });
+        room.build.clear()
+
+        three.scene.remove(room.build);
 
         updateOrbitControls(mode);
 
@@ -219,17 +221,20 @@ export function udpateMode(mode: '2D' | '3D'){
     }
 }
 
+
+
 function disposeWalls(){
     if(room.walls.length > 0){
         room.walls.forEach(roomMesh => {
             roomMesh.geometry.dispose();
             (roomMesh.material as THREE.MeshBasicMaterial).dispose();
-            roomMesh.clear();
             three.scene.remove(roomMesh);
+            three.renderer.renderLists.dispose();
         });
         room.walls = [];
     }
 }
+
 
 
 function createWalls(){
@@ -237,8 +242,9 @@ function createWalls(){
 
     room.vertices.forEach((vertex, i) => {
 
+        const v2Index = i === room.vertices.length - 1 ? 0 : i + 1
         const v1 = vertex;
-        const v2 = room.vertices[(i + 1 ) % room.vertices.length];
+        const v2 = room.vertices[v2Index];
 
         const length = v1.distanceTo(v2);
         const geometry = new THREE.PlaneGeometry( length, 1 );
@@ -256,7 +262,9 @@ function createWalls(){
         const centerZ = (v1.y + v2.y) / 2;
 
         wall.position.set(centerX, 1 * 0.5, centerZ);
-        wall.rotation.y = degToRad(-[room.edges[i].angleInDeg]);
+        wall.rotation.y = degToRad(-room.edges[i].angleInDeg);
+
+        wall.geometry.computeBoundsTree();
 
         const edgeV = new THREE.Vector2()
             .subVectors(v2, v1)
@@ -267,11 +275,12 @@ function createWalls(){
         wall.userData.normal = outwardNormal;
 
         room.walls.push(wall);
-        room.build.add(wall);
-        three.scene.add(wall);
+        room.build.add(wall)
     });
-    console.log('end: ', room.walls);
+    three.scene.add(room.build);
 }
+
+
 
 export function updateOrbitControls(mode: '2D' | '3D'){
     if(mode === '2D'){
@@ -289,6 +298,8 @@ export function updateOrbitControls(mode: '2D' | '3D'){
     }
 }
 
+
+
 export function updateVisibleFaces(){
     const faceNormals : THREE.Vector3[] = []; 
     room.walls.forEach(wall => {
@@ -300,8 +311,6 @@ export function updateVisibleFaces(){
     const worldNormal = new THREE.Vector3();
     const cameraDir = new THREE.Vector3();
 
-    // room.build.getWorldPosition(cubePosition);
-
     for (let i = 0; i < faceNormals.length; i++) {
         worldNormal.copy(faceNormals[i])
         .transformDirection(room.build.matrixWorld);
@@ -309,11 +318,10 @@ export function updateVisibleFaces(){
         cameraDir.copy(three.camera.position)
         .sub(cubePosition)
         .normalize();
-        
 
         const facingCamera = worldNormal.dot(cameraDir) > 0;
 
-        const material = room.walls[i].material as THREE.MeshBasicMaterial;
+        const material = room.walls[i].material;
 
         gsap.to(material, {
             'opacity': facingCamera ? 0 : 1,
