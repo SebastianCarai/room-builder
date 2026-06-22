@@ -1,8 +1,7 @@
-import { degToRad } from "three/src/math/MathUtils.js";
 import { actionsPanel, room, state, three } from "../../store/globalState";
 import { activeHandleMaterial, basicHandleMaterial } from "../../store/meterials";
-import { Vector2, Vector3, Plane, Shape, ShapeGeometry, PlaneGeometry } from "three";
-import { createEdges } from "../setup";
+import { Vector2, Vector3, Plane } from "three";
+import { rebuildRoomFloor } from "./floor-editing";
 
 
 const originalStartVertex = new Vector2();
@@ -23,6 +22,8 @@ function handleActionPanel(event : Event){
         room.edgeToMove = null;
     }
 }
+
+
 
 export function mouseDown(event: MouseEvent){
     state.timerStart = Date.now();
@@ -76,6 +77,7 @@ export function mouseDown(event: MouseEvent){
         }
     }
 }
+
 
 
 export function mouseMove(event: MouseEvent){
@@ -168,42 +170,4 @@ export function mouseUp(){
 }
 
 
-/**
- * 
- * @param floor 
- * @param vertexToMove 
- */
-export function rebuildRoomFloor(vertexToMove: number | null){
 
-    // Floor Geometry
-    const newShape = new Shape(room.vertices);
-    const newFloorGeometry = new ShapeGeometry(newShape);
-    room.floor!.geometry.dispose();
-
-
-    createEdges();  
-
-    room.edges.forEach((edge, index) => {
-        edge.handle = index;
-
-        const v1 = room.vertices[edge.startIndex];
-        const v2 = room.vertices[edge.endIndex];
-
-        const length = v1.distanceTo(v2);
-        const newGeo = new PlaneGeometry(length, 0.05);
-
-        room.edgeHandles[index].rotation.z = degToRad(edge.angleInDeg);
-        room.edgeHandles[index].position.set((v1.x + v2.x) / 2, (v1.y + v2.y) / 2, 0.001);
-        room.edgeHandles[index].geometry.dispose();
-
-        room.edgeHandles[index].geometry = newGeo;
-    });
-
-    room.floor!.geometry = newFloorGeometry;
-
-
-    if(vertexToMove || vertexToMove === 0){
-        room.verticesHandles[vertexToMove].position.x = room.vertices[vertexToMove].x;
-        room.verticesHandles[vertexToMove].position.y = room.vertices[vertexToMove].y;
-    }
-}

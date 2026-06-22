@@ -1,4 +1,4 @@
-import type { Mesh, Scene, WebGLRenderer, PerspectiveCamera, Vector2, Raycaster, Group } from "three"
+import type { Mesh, Scene, WebGLRenderer, PerspectiveCamera, Vector2, Raycaster, Group, Box3 } from "three"
 import type { OrbitControls } from "three/examples/jsm/Addons.js"
 
 
@@ -12,9 +12,12 @@ export interface ThreeScene{
     raycaster: Raycaster,
 }
 
+export type Mode = '2D' | '3D'
+
 export interface State{
-    mode: '2D' | '3D',
+    mode: Mode,
     isDragging : boolean,
+    isAddingNewProp: boolean,
     isActionsPanelActive : boolean,
     timerStart : number
 }
@@ -38,7 +41,10 @@ export interface RoomProps{
     floor: Mesh | null,
     walls: Mesh[],
     build: Group,
-    propToMove: Mesh | null;
+    buildBBox: Box3,
+    propToMove: Mesh | null,
+    propBBox: Box3,
+    props: Mesh[]
 }
 
 

@@ -1,9 +1,10 @@
 import { degToRad } from "three/src/math/MathUtils.js";
-import { room, state, three } from "../store/globalState";
+import { room, state, three, sizes, panelWidth, setPanelWidthFromMode } from "../store/globalState";
 import * as THREE from "three";
 import { basicHandleMaterial } from "../store/meterials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from "gsap";
+import { populatePropItems } from "./room-editing/add-items";
 
 
 
@@ -28,28 +29,11 @@ export function setupScene(){
     /**
      * Sizes
      */
-    const sizes = {
-        width: window.innerWidth,
-        height: window.innerHeight
-    }
 
     /**
      * Resizing
      */
-    window.addEventListener('resize', () =>
-    {
-        // Update sizes
-        sizes.width = window.innerWidth
-        sizes.height = window.innerHeight
-
-        // Update camera
-        three.camera!.aspect = sizes.width / sizes.height
-        three.camera!.updateProjectionMatrix()
-
-        // Update renderer
-        three.renderer!.setSize(sizes.width, sizes.height)
-        three.renderer!.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    })
+    window.addEventListener( 'resize', () => resizeCanvas(state.mode) )
 
     
     /**
@@ -69,6 +53,25 @@ export function setupScene(){
     three.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     three.renderer.setSize(sizes.width, sizes.height)
     three.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+}
+
+
+export function resizeCanvas(mode: '2D' | '3D'){
+    
+    setPanelWidthFromMode(mode);
+    
+
+    // Update sizes
+    sizes.width = window.innerWidth - panelWidth;
+    sizes.height = window.innerHeight
+
+    // Update camera
+    three.camera!.aspect = sizes.width / sizes.height
+    three.camera!.updateProjectionMatrix()
+
+    // Update renderer
+    three.renderer!.setSize(sizes.width, sizes.height)
+    three.renderer!.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 }
 
 
@@ -174,20 +177,27 @@ export function createVerticesHandles(){
 
 export function udpateMode(mode: '2D' | '3D'){
     state.mode = mode;
+    const panel = document.querySelector('.props-panel') as HTMLElement;
 
     updateOrbitControls(mode);
 
+    
     // Swicth to 3d mode
     if(mode === '3D'){
+        setPanelWidthFromMode(mode);
+        resizeCanvas(mode);
+        panel.style.display = 'flex';
+        populatePropItems();
+        
         createWalls();
-
+        
         room.edgeHandles.forEach(edgeHandle => {
             three.scene.remove(edgeHandle);
         });
         room.verticesHandles.forEach(vertexHandle => {
             three.scene.remove(vertexHandle);
         });
-
+        
         room.floor!.rotation.x = Math.PI / 2;
         three.camera.position.set(2, 2, 2);
         
@@ -197,8 +207,9 @@ export function udpateMode(mode: '2D' | '3D'){
 
     // Switch to 2D mode (floor editing)
     else{
-
-        console.log(three.scene.children);
+        setPanelWidthFromMode(mode);
+        resizeCanvas(mode);
+        panel.style.display = 'none';
         
 
         room.floor!.rotation.x = 0;
@@ -324,7 +335,7 @@ export function updateVisibleFaces(){
         const material = room.walls[i].material;
 
         gsap.to(material, {
-            'opacity': facingCamera ? 0 : 1,
+            'opacity': facingCamera ? 0.1 : 1,
             duration: 1,
             ease: 'power3.out'
         })
