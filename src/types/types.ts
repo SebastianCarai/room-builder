@@ -44,7 +44,8 @@ export interface RoomProps{
     buildBBox: Box3,
     propToMove: Mesh | null,
     propBBox: Box3,
-    props: Mesh[]
+    props: Mesh[],
+    surfaces: Mesh[]
 }
 
 

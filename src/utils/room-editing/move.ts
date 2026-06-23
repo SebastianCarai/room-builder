@@ -3,6 +3,7 @@ import { basicHandleMaterial, errorMaterial } from '../../store/meterials';
 import { room, sizes, three } from '../../store/globalState';
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 import type { MeshBVH } from 'three-mesh-bvh';
+import { s } from '../../store/propsState';
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -10,115 +11,114 @@ THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 
 three.raycaster.firstHitOnly = true;
 
-let hit = false;
 const lastActivePropPosition = new THREE.Vector3();
-const dragPlane = new THREE.Plane(
-    new THREE.Vector3(0, 1, 0), // horizontal plane
-    0 // y = 0
-);
 
 var planeNormal = new THREE.Vector3(0, 1, 0);
 const intersection = new THREE.Vector3();
 const shift = new THREE.Vector3();
-let propsToInterset : THREE.Mesh[];
+
+
+const dragOffsetXZ = new THREE.Vector3();
 
 export function clickProp(event: MouseEvent){
-    hit = false;
+    s.hit = false;
 
     three.mouse.x = (event.clientX / sizes.width) * 2 - 1;
     three.mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     three.raycaster.setFromCamera(three.mouse, three.camera);
 
-    const target = three.raycaster.intersectObjects(room.props);
+    const target = three.raycaster.intersectObjects([...room.props, ...room.surfaces]);
     
     if(target.length > 0){
-        room.propToMove = target[0].object as THREE.Mesh;
+
+        s.propToMove = target[0].object as THREE.Mesh;
         three.controls.enabled = false;
 
         room.buildBBox.setFromObject(room.build);
-        room.propBBox.setFromObject(room.propToMove);
+
+        s.propToMoveBBox.setFromObject(s.propToMove).getSize(s.propToMoveSize);
 
         // Save the starting position of the cube, where the prop will be placed
         // if the drop position is invalid
-        lastActivePropPosition.copy(room.propToMove.position);
+        lastActivePropPosition.copy(s.propToMove.position);
 
-        (room.propToMove.material as THREE.MeshBasicMaterial).opacity  = 0.5;
+        (s.propToMove.material as THREE.MeshBasicMaterial).opacity  = 0.5;
 
         document.body.style.cursor = 'grab';
 
-        // Update the plane on which dragging will occur
-        dragPlane.setFromNormalAndCoplanarPoint(planeNormal, target[0].point);
-        // Save offset between the object's position and the clicked point on the prop,
-        // so the object doesn't jump when dragging starts
-        shift.subVectors(room.propToMove.position, target[0].point);
+        const floorHit = three.raycaster.intersectObjects([...room.surfaces, room.floor!]);
 
-        propsToInterset = room.props.filter(prop => prop.userData.id != room.propToMove?.userData.id);
+        if (floorHit.length) {
+            dragOffsetXZ.set(
+                s.propToMove.position.x - floorHit[0].point.x,
+                0,
+                s.propToMove.position.z - floorHit[0].point.z
+            );
+        }
+
+        three.controls.enabled = false;
     }
 }
 
 
+const direction = new THREE.Vector3(0, -1, 0)
+direction.normalize();
 
 export function moveProp(event: MouseEvent){
-    if(!room.propToMove) return;
 
-    hit = false;
+    if(!s.propToMove || event.target != three.renderer.domElement) return;
 
-    const previousPosition = room.propToMove.position.clone();
+    s.hit = false;
+
+    const previousPosition : THREE.Vector3 = s.propToMove.position.clone();
+
 
     three.mouse.x = (event.clientX / sizes.width) * 2 - 1;
     three.mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     three.raycaster.setFromCamera(three.mouse, three.camera);
 
-    // Update prop position
-    if(three.raycaster.ray.intersectPlane(dragPlane, intersection)){
-        room.propToMove.position.copy(intersection).add(shift);
+    const surfacesIntersection = three.raycaster.intersectObjects([...room.surfaces, room.floor!]);
 
-        const delta = new THREE.Vector3().subVectors(room.propToMove.position, previousPosition);
+    if(surfacesIntersection.length > 0){
+        s.activeSurface = surfacesIntersection[0].object as THREE.Mesh;
+        s.activeSurfaceBBox.setFromObject(s.activeSurface).getSize(s.activeSurfaceSize);
 
-        room.propBBox.translate(delta);
+        s.dragPlane.constant = - s.activeSurfaceSize.y - (s.propToMoveSize.y / 2);
 
-        previousPosition.copy(room.propToMove.position);
+        const hitSurface = three.raycaster.intersectObject(s.activeSurface);
 
-    }
+        if(hitSurface.length > 0 ){
 
+            s.propToMove.position.set(
+                hitSurface[0].point.x + dragOffsetXZ.x,
+                -s.dragPlane.constant,
+                hitSurface[0].point.z + dragOffsetXZ.z
+            );
 
-    [...room.walls, ...propsToInterset].forEach(prop => {
-        const bvh = prop.geometry.boundsTree as MeshBVH;
-        
-        // Check if prop is outside of the walls or is colliding with one of them
-        if(
-            !room.buildBBox.containsBox(room.propBBox) || 
-            bvh.intersectsGeometry( 
-                room.propToMove!.geometry, 
-                new THREE.Matrix4().copy( prop.matrixWorld ).invert().multiply( room.propToMove!.matrixWorld ) )
-        ){
-            hit = true
+            const delta = new THREE.Vector3().subVectors(s.propToMove.position, previousPosition);
+
+            s.propToMoveBBox.translate(delta);
+
+            previousPosition.copy(s.propToMove.position);
         }
-    });
-
-    if(hit){
-        room.propToMove.material = errorMaterial;
-    }else{
-        room.propToMove.material = basicHandleMaterial;
     }
 }
 
 
 export function releaseProp(){
 
-    if(room.propToMove){
+    if(!s.propToMove) return
 
-        // If hit >> prop is outside of the walls or is colliding with one of them
-        // Place the prop to his starting position
-        if(hit){
-            room.propToMove.position.copy(lastActivePropPosition);
-            room.propToMove.material = basicHandleMaterial;
-        }
-        
-        (room.propToMove.material as THREE.MeshBasicMaterial).opacity = 1;
-        room.propBBox.setFromObject(room.propToMove);
-        three.controls.enabled = true;
-        room.propToMove = null;
-        document.body.style.cursor = 'default';
+    if(s.hit){
+        s.propToMove.position.copy(lastActivePropPosition);
+        s.propToMove.material = basicHandleMaterial;
     }
+    
+    (s.propToMove.material as THREE.MeshBasicMaterial).opacity = 1;
+    three.controls.enabled = true;
+    s.propToMove = null;
+    document.body.style.cursor = 'default';
+    s.propToMoveBBox.makeEmpty();
+    s.isNewPropAdded = false;
+    s.dragPlane.constant = 0;
 }

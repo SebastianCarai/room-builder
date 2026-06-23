@@ -5,6 +5,7 @@ import { basicHandleMaterial } from "../store/meterials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from "gsap";
 import { populatePropItems } from "./room-editing/add-items";
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 
 
 
@@ -13,6 +14,7 @@ import { populatePropItems } from "./room-editing/add-items";
  * Camera, Lights, Resizing, OrbitControls, Renderer.
  */
 export function setupScene(){
+
 
     /**
      * Camera
@@ -53,6 +55,15 @@ export function setupScene(){
     three.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     three.renderer.setSize(sizes.width, sizes.height)
     three.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+
+    /**
+     * Raycaster
+     */
+    THREE.Mesh.prototype.raycast = acceleratedRaycast;
+    THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+    THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+    three.raycaster.firstHitOnly = true;
 }
 
 
@@ -234,7 +245,7 @@ export function udpateMode(mode: '2D' | '3D'){
 
 
 
-function disposeWalls(){
+export function disposeWalls(){
     if(room.walls.length > 0){
         room.walls.forEach(roomMesh => {
             roomMesh.geometry.dispose();
@@ -248,7 +259,7 @@ function disposeWalls(){
 
 
 
-function createWalls(){
+export function createWalls(){
     disposeWalls();
 
     room.vertices.forEach((vertex, i) => {

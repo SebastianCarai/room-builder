@@ -3,7 +3,7 @@ import type { ThreeScene, RoomProps, State, Mode } from '../types/types';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export const state : State = {
-    mode: '2D',
+    mode: '3D',
     isDragging : false,
     isAddingNewProp: false,
     isActionsPanelActive : false,
@@ -49,7 +49,8 @@ export const room : RoomProps = {
     buildBBox: new THREE.Box3(),
     propToMove: null,
     propBBox: new THREE.Box3(),
-    props: []
+    props: [],
+    surfaces: []
 }
 
 export const actionsPanel = document.querySelector('.actions') as HTMLElement;
