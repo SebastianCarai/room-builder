@@ -4,8 +4,8 @@ import * as THREE from "three";
 import { basicHandleMaterial } from "../store/meterials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from "gsap";
-import { populatePropItems } from "./room-editing/add-items";
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+import { populatePropItems } from "./room-editing/move";
 
 
 

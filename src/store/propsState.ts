@@ -1,14 +1,17 @@
-import { Box3, Plane, Vector3, type Mesh } from "three"
+import { Box3,  Plane, Group, Vector3, type Mesh } from "three"
 
 export interface PropsState{
-    panelItems: HTMLElement[],
-    propToAdd : Mesh | null,
-    propToAddBBox: Box3,
-    isNewPropAdded: boolean
+    panelItems: HTMLElement[]
 }
+
+export const propsState : PropsState = {
+    panelItems : []
+}
+
 interface RoomState{
     hit: boolean,
     propToMove : Mesh | null,
+    groupToMove: Group,
     propToMoveSize: Vector3,
     propToMoveBBox : Box3,
     activeSurface: Mesh | null,
@@ -21,18 +24,10 @@ interface RoomState{
     dragPlane: Plane
 }
 
-
-export const propsState : PropsState = {
-    panelItems : [],
-    propToAdd : null,
-    propToAddBBox: new Box3(),
-    isNewPropAdded: false
-}
-
-
 export const s : RoomState = {
     hit: false,
     propToMove: null,
+    groupToMove: new Group(),
     propToMoveSize: new Vector3(),
     propToMoveBBox : new Box3(),
     activeSurface: null,
@@ -42,5 +37,5 @@ export const s : RoomState = {
     propToMoveCenter: new Vector3(),
     intersectedBBox: new Box3(),
     intersectedMeshSize: new Vector3(),
-    dragPlane: new Plane( new Vector3(0, 1, 0), 0),
+    dragPlane: new Plane(new Vector3(0, 1, 0), 0)
 }

@@ -49,5 +49,11 @@ export interface RoomProps{
 }
 
 
+export interface CollisionBox {
+    bbox: Box3,
+    propId: string
+}
+
+
 
 

@@ -4,9 +4,8 @@ import { room, three, splitWallButton, state } from './store/globalState';
 import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode, updateVisibleFaces } from './utils/setup';
 import { basicHandleMaterial, floorMaterial } from './store/meterials';
 import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/mouse-function';
-import { clickProp, moveProp, releaseProp } from './utils/room-editing/move';
+import { clickProp, moveProp, releaseNewProp, releaseProp } from './utils/room-editing/move';
 import { splitWall } from './utils/floor-planner/floor-editing';
-import { releaseNewProp } from './utils/room-editing/add-items';
 
 
 // const gui = new GUI();
@@ -22,7 +21,7 @@ const shape = new THREE.Shape(room.vertices);
 const floorGeometry = new THREE.ShapeGeometry(shape);
 room.floor = new THREE.Mesh(floorGeometry, floorMaterial);
 room.floor.userData = {
-    surfaceY : 0
+    id: 0
 }
 three.camera.lookAt(room.floor.position);
 three.scene.add(room.floor);
@@ -42,14 +41,18 @@ testBox.position.y = .125;
 testBox.position.z = .8;
 testTable.position.y = .25;
 testTable.position.z = -.5;
+testBox.userData.isSurface = false;
 testTable.userData.isSurface = true;
 testBox.geometry.computeBoundsTree();
 testTable.geometry.computeBoundsTree();
 
-room.props.push(testBox);
-room.surfaces.push(testTable);
+testBox.userData.id = 1;
+testTable.userData.id = 2;
 
-three.scene.add(testBox, testTable)
+room.props.push(testBox);
+// room.surfaces.push(testTable);
+
+three.scene.add(testBox)
 
 
 /**
