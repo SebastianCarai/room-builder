@@ -5,10 +5,11 @@ export const basicHandleMaterial = new MeshBasicMaterial({
     opacity: .5,
     transparent: true
 });
+
 export const activeHandleMaterial = new MeshBasicMaterial({color: 0x0000ff});
 
 export const floorMaterial = new MeshStandardMaterial({
-    color: 0xffffff, 
+    color: 0xffffff,
     side: DoubleSide
 });
 export const errorMaterial = new MeshBasicMaterial({

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { ThreeScene, RoomProps, State, Mode } from '../types/types';
+import type { ThreeScene, RoomData, State, Mode } from '../types/types';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export const state : State = {
@@ -13,7 +13,9 @@ export const state : State = {
 export let panelWidth = state.mode === '3D' ? parseInt(window.getComputedStyle(document.body).getPropertyValue('--props-panel-width').split('px')[0]) : 0;
 
 export function setPanelWidthFromMode(mode : Mode) {
-    panelWidth = mode === '3D' ? parseInt(window.getComputedStyle(document.body).getPropertyValue('--props-panel-width').split('px')[0]) : 0;
+    panelWidth = mode === '3D' 
+    ? parseInt(window.getComputedStyle(document.body).getPropertyValue('--props-panel-width').split('px')[0]) 
+    : 0;
 }
 
 export const sizes = {
@@ -29,9 +31,11 @@ export const three : ThreeScene = {
     controls : new OrbitControls(new THREE.PerspectiveCamera(), null),
     mouse : new THREE.Vector2(),
     raycaster : new THREE.Raycaster(),
+    composer: null
 }
 
-export const room : RoomProps = {
+export const room : RoomData = {
+    panelItems : [],
     vertices : [
         new THREE.Vector2(-1, 1),
         new THREE.Vector2(1, 1),
@@ -47,12 +51,9 @@ export const room : RoomProps = {
     walls: [],
     build: new THREE.Group(),
     buildBBox: new THREE.Box3(),
-    propToMove: null,
-    propBBox: new THREE.Box3(),
     props: [],
     surfaces: []
 }
 
 export const actionsPanel = document.querySelector('.actions') as HTMLElement;
-export const splitWallButton = document.querySelector('#split-wall') as HTMLElement
 

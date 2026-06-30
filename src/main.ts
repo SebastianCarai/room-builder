@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 // import GUI from 'lil-gui';
-import { room, three, splitWallButton, state } from './store/globalState';
+import { room, three, state } from './store/globalState';
 import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode, updateVisibleFaces } from './utils/setup';
-import { basicHandleMaterial, floorMaterial } from './store/meterials';
-import { mouseDown, mouseMove, mouseUp } from './utils/floor-planner/mouse-function';
-import { clickProp, moveProp, releaseNewProp, releaseProp } from './utils/room-editing/move';
-import { splitWall } from './utils/floor-planner/floor-editing';
+import { floorMaterial } from './store/meterials';
+import { mouseDown, mouseMove2d, mouseUp } from './utils/2d-floor-planner/mouse-function';
+import { clickProp, mouseMove3d, releaseProp } from './utils/3d-room-editing/move';
+import { splitWall } from './utils/2d-floor-planner/floor-editing';
 
 
 // const gui = new GUI();
@@ -29,32 +29,6 @@ three.scene.add(room.floor);
 udpateMode('3D');
 
 
-const testBox = new THREE.Mesh(
-    new THREE.BoxGeometry(.25, .25, .25),
-    basicHandleMaterial
-);
-const testTable = new THREE.Mesh(
-    new THREE.BoxGeometry(1, .5, .75),
-    basicHandleMaterial
-);
-testBox.position.y = .125;
-testBox.position.z = .8;
-testTable.position.y = .25;
-testTable.position.z = -.5;
-testBox.userData.isSurface = false;
-testTable.userData.isSurface = true;
-testBox.geometry.computeBoundsTree();
-testTable.geometry.computeBoundsTree();
-
-testBox.userData.id = 1;
-testTable.userData.id = 2;
-
-room.props.push(testBox);
-// room.surfaces.push(testTable);
-
-three.scene.add(testBox)
-
-
 /**
  * Interactivity
  */
@@ -66,31 +40,26 @@ document.addEventListener('mousedown', (event) =>{
 
 document.addEventListener('mousemove', (event) =>{
     
-    if(state.mode === '2D') mouseMove(event);
-        
-    if(state.mode === '3D') moveProp(event);
+    if(state.mode === '2D') mouseMove2d(event);
+
+    if(state.mode === '3D') mouseMove3d(event);
 
 });
 
 document.addEventListener('mouseup', () =>{
     if(state.mode === '2D') mouseUp();
 
-    if(state.mode === '3D'){
-        if(state.isAddingNewProp){
-            releaseNewProp();
-            return
-        } 
-
-        if(state.mode === '3D') releaseProp()
-    } 
+    if(state.mode === '3D') releaseProp();
 });
 
 
+// Split wall in 2D floor editing
+const splitWallButton = document.querySelector('#split-wall') as HTMLElement;
 splitWallButton.onclick = () => splitWall();
 
+// Update mode
 const button2d = document.querySelector('#button-2d') as HTMLElement;
 const button3d = document.querySelector('#button-3d') as HTMLElement;
-
 button2d.onclick = () => udpateMode('2D');
 button3d.onclick = () => udpateMode('3D');
 
@@ -116,7 +85,7 @@ const tick = () =>
     three.controls.update();
 
     // Render
-    three.renderer.render(three.scene, three.camera)
+    three.composer!.render();
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)

@@ -80,7 +80,7 @@ export function mouseDown(event: MouseEvent){
 
 
 
-export function mouseMove(event: MouseEvent){
+export function mouseMove2d(event: MouseEvent){
 
     three.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     three.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;

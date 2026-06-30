@@ -4,17 +4,18 @@ import * as THREE from "three";
 import { basicHandleMaterial } from "../store/meterials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from "gsap";
-import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
-import { populatePropItems } from "./room-editing/move";
-
+import { populatePropItems } from "./3d-room-editing/move";
+import { EffectComposer } from "three/examples/jsm/Addons.js";
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { addHoverGlow, setupOutlinePass} from "./3d-room-editing/outline";
 
 
 /**
  * Setup Three.js scene. 
  * Camera, Lights, Resizing, OrbitControls, Renderer.
  */
-export function setupScene(){
 
+export function setupScene(){
 
     /**
      * Camera
@@ -25,25 +26,22 @@ export function setupScene(){
     /**
      * Lights
      */
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.1)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2);
+    const spotLight = new THREE.SpotLight(0xffffff, 20, 2, Math.PI / 2, 1, 1)
+    spotLight.position.y = 1.5;
     three.scene.add(ambientLight);
-
-    /**
-     * Sizes
-     */
 
     /**
      * Resizing
      */
     window.addEventListener( 'resize', () => resizeCanvas(state.mode) )
 
-    
     /**
      * Controls
      */
     three.controls = new OrbitControls(three.camera, three.canvas)
     three.controls.enableDamping = true;
-    updateOrbitControls('2D')
+    updateOrbitControls('3D');
 
     /**
      * Renderer
@@ -51,20 +49,28 @@ export function setupScene(){
     three.renderer = new THREE.WebGLRenderer({
         canvas: three.canvas
     })
-    three.renderer.shadowMap.enabled = true
-    three.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    three.renderer.setSize(sizes.width, sizes.height)
+    three.renderer.shadowMap.enabled = true;
+    three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    three.renderer.setSize(sizes.width, sizes.height);
     three.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 
     /**
-     * Raycaster
+     * Composer
      */
-    THREE.Mesh.prototype.raycast = acceleratedRaycast;
-    THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
-    THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-    three.raycaster.firstHitOnly = true;
+    three.composer = new EffectComposer( three.renderer );
+
+	//Setup renderPass and add it to the composer
+	const renderPass = new RenderPass( three.scene, three.camera );
+	three.composer.addPass( renderPass );
+
+    // Outline pass and hover glow
+    setupOutlinePass();
+	document.addEventListener('mousemove', addHoverGlow, false);
 }
+
+
+
 
 
 export function resizeCanvas(mode: '2D' | '3D'){
@@ -285,8 +291,6 @@ export function createWalls(){
 
         wall.position.set(centerX, 1 * 0.5, centerZ);
         wall.rotation.y = degToRad(-room.edges[i].angleInDeg);
-
-        wall.geometry.computeBoundsTree();
 
         const edgeV = new THREE.Vector2()
             .subVectors(v2, v1)
