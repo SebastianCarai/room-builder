@@ -1,13 +1,14 @@
 import { degToRad } from "three/src/math/MathUtils.js";
 import { room, state, three, sizes, panelWidth, setPanelWidthFromMode } from "../store/globalState";
 import * as THREE from "three";
-import { basicHandleMaterial } from "../store/meterials";
+import { basicHandleMaterial } from "../store/materials";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import gsap from "gsap";
 import { populatePropItems } from "./3d-room-editing/move";
 import { EffectComposer } from "three/examples/jsm/Addons.js";
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { addHoverGlow, setupOutlinePass} from "./3d-room-editing/outline";
+import { updateOrbitControls } from "./3d-room-editing/threeHelpers";
 
 
 /**
@@ -27,9 +28,14 @@ export function setupScene(){
      * Lights
      */
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
-    const spotLight = new THREE.SpotLight(0xffffff, 20, 2, Math.PI / 2, 1, 1)
+    const spotLight = new THREE.SpotLight(0xffffff, 20, 2, Math.PI / 4, 1, 1);
     spotLight.position.y = 1.5;
-    three.scene.add(ambientLight);
+    spotLight.shadow.mapSize.set(2048, 2048);
+
+    spotLight.shadow.camera.near = 0.1;
+    spotLight.shadow.camera.far = 10;
+    spotLight.castShadow = true;
+    three.scene.add(ambientLight, spotLight);
 
     /**
      * Resizing
@@ -50,7 +56,7 @@ export function setupScene(){
         canvas: three.canvas
     })
     three.renderer.shadowMap.enabled = true;
-    three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    three.renderer.shadowMap.type = THREE.PCFShadowMap;
     three.renderer.setSize(sizes.width, sizes.height);
     three.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -194,7 +200,7 @@ export function createVerticesHandles(){
 
 export function udpateMode(mode: '2D' | '3D'){
     state.mode = mode;
-    const panel = document.querySelector('.props-panel') as HTMLElement;
+    const panel = document.querySelector('.side-panel') as HTMLElement;
 
     updateOrbitControls(mode);
 
@@ -277,7 +283,7 @@ export function createWalls(){
         const length = v1.distanceTo(v2);
         const geometry = new THREE.PlaneGeometry( length, 1 );
         
-        const wall = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+        const wall = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({
                 color: 0xffffff,
                 transparent: true,
                 opacity: 1,
@@ -299,29 +305,12 @@ export function createWalls(){
         const outwardNormal = new THREE.Vector3(-edgeV.y, 0, edgeV.x);
 
         wall.userData.normal = outwardNormal;
+        wall.receiveShadow = true;
 
         room.walls.push(wall);
         room.build.add(wall)
     });
     three.scene.add(room.build);
-}
-
-
-
-export function updateOrbitControls(mode: '2D' | '3D'){
-    if(mode === '2D'){
-        three.controls.enableRotate = false;
-        three.controls.mouseButtons = {
-            LEFT: THREE.MOUSE.PAN
-        }
-    }else{
-        three.controls.enableRotate = true;
-        three.controls.mouseButtons = {
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.PAN
-        }
-    }
 }
 
 
@@ -347,6 +336,7 @@ export function updateVisibleFaces(){
 
         const facingCamera = worldNormal.dot(cameraDir) > 0;
 
+        room.walls[i].userData.isVisible = !facingCamera;
         const material = room.walls[i].material;
 
         gsap.to(material, {

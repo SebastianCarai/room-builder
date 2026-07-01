@@ -12,6 +12,7 @@ export const floorMaterial = new MeshStandardMaterial({
     color: 0xffffff,
     side: DoubleSide
 });
+
 export const errorMaterial = new MeshBasicMaterial({
     color: 0xff0000,
     transparent: true,

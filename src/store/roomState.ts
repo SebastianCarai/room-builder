@@ -13,5 +13,14 @@ export const s : RoomState = {
     propToMoveCenter: new Vector3(),
     intersectedBBox: new Box3(),
     intersectedMeshSize: new Vector3(),
-    dragPlane: new Plane(new Vector3(0, 1, 0), 0)
+    dragPlane: new Plane(new Vector3(0, 1, 0), 0),
+}
+
+
+export const r = {
+    startX: 0,
+    startRotation: 0,
+    rotationSpeed : 0.01,
+    lastX : 0,
+    direction: 0
 }

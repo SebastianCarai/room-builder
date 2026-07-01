@@ -1,14 +1,12 @@
 import * as THREE from 'three'
-// import GUI from 'lil-gui';
 import { room, three, state } from './store/globalState';
 import { createEdgeHandles, createEdges, createVerticesHandles, setupScene, udpateMode, updateVisibleFaces } from './utils/setup';
-import { floorMaterial } from './store/meterials';
+import { floorMaterial } from './store/materials';
 import { mouseDown, mouseMove2d, mouseUp } from './utils/2d-floor-planner/mouse-function';
-import { clickProp, mouseMove3d, releaseProp } from './utils/3d-room-editing/move';
+import { clickProp, mouseMove3d, mouseUp3d } from './utils/3d-room-editing/move';
 import { splitWall } from './utils/2d-floor-planner/floor-editing';
+import { startClickTimer } from './utils/helpers';
 
-
-// const gui = new GUI();
 
 setupScene();
 createEdges();
@@ -20,6 +18,8 @@ createVerticesHandles();
 const shape = new THREE.Shape(room.vertices);
 const floorGeometry = new THREE.ShapeGeometry(shape);
 room.floor = new THREE.Mesh(floorGeometry, floorMaterial);
+
+room.floor.receiveShadow = true;
 room.floor.userData = {
     id: 0
 }
@@ -33,6 +33,8 @@ udpateMode('3D');
  * Interactivity
  */
 document.addEventListener('mousedown', (event) =>{
+    startClickTimer();
+
     if(state.mode === '2D') mouseDown(event)
         
     if(state.mode === '3D') clickProp(event)
@@ -46,10 +48,10 @@ document.addEventListener('mousemove', (event) =>{
 
 });
 
-document.addEventListener('mouseup', () =>{
+document.addEventListener('mouseup', (event) =>{
     if(state.mode === '2D') mouseUp();
 
-    if(state.mode === '3D') releaseProp();
+    if(state.mode === '3D') mouseUp3d(event);
 });
 
 

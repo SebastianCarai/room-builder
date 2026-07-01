@@ -1,7 +1,8 @@
-import { actionsPanel, room, state, three } from "../../store/globalState";
-import { activeHandleMaterial, basicHandleMaterial } from "../../store/meterials";
+import { panels, room, state, three } from "../../store/globalState";
+import { activeHandleMaterial, basicHandleMaterial } from "../../store/materials";
 import { Vector2, Vector3, Plane } from "three";
 import { rebuildRoomFloor } from "./floor-editing";
+import { checkClick } from "../helpers";
 
 
 const originalStartVertex = new Vector2();
@@ -13,8 +14,8 @@ const dragStart = new Vector3();
 function handleActionPanel(event : Event){
     const target = event.target as HTMLElement;
 
-    if(!actionsPanel.contains(target) && target != actionsPanel){
-        actionsPanel.style.display = 'none';
+    if(!panels.actionsPanel.contains(target) && target != panels.actionsPanel){
+        panels.actionsPanel.style.display = 'none';
         state.isActionsPanelActive = false;
         for (let i = 0; i < room.edges.length; i++) {
             room.edgeHandles[i].material = basicHandleMaterial;
@@ -26,7 +27,6 @@ function handleActionPanel(event : Event){
 
 
 export function mouseDown(event: MouseEvent){
-    state.timerStart = Date.now();
 
     if(state.isActionsPanelActive){
         handleActionPanel(event);
@@ -148,13 +148,13 @@ export function mouseMove2d(event: MouseEvent){
 
 
 export function mouseUp(){
-    const endClick = Date.now();
 
-    // It's a click
-    if(endClick - state.timerStart < 250){
+    const isClick = checkClick();
+
+    if(isClick){
         // Activate actionsPanel panel
         if(room.edgeToMove && state.isActionsPanelActive === false){
-            actionsPanel.style.display = 'flex';
+            panels.actionsPanel.style.display = 'flex';
             state.isActionsPanelActive = true;
         }
     }

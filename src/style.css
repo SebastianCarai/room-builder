@@ -7,7 +7,7 @@
 
 
 :root { 
-    --props-panel-width: 400px; 
+    --side-panel-width: 400px; 
 }
 
 
@@ -15,6 +15,10 @@ html,
 body
 {
     overflow: hidden;
+}
+
+.webgl.cursor-rotate{
+    cursor: ew-resize;
 }
 
 .webgl
@@ -26,13 +30,13 @@ body
 }
 
 
-.props-panel{
+.side-panel{
     display: none;
     position: absolute;
     z-index: 10;
     top: 0;
     right: 0;
-    width: var(--props-panel-width);
+    width: var(--side-panel-width);
     height: 100%;
     background-color: white;
     padding: 1rem 1.5rem;
@@ -40,7 +44,7 @@ body
     justify-content: center;
 }
 
-.panel-items-wrapper{
+.side-panel-wrapper{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -48,11 +52,16 @@ body
     row-gap: 1rem;
 }
 
+.texture-panel{
+    display: none;
+}
+
 .panel-item{
     width: 200px;
     aspect-ratio: 1;
     background-color: gray;
 }
+
 
 .actions{
     display: none;

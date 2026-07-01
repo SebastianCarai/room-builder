@@ -1,4 +1,4 @@
-import { Group, Mesh, Texture, type Material } from "three";
+import { Group, Mesh, MOUSE, Texture, type Material } from "three";
 import { three } from "../../store/globalState";
 
 export function removeGroupFromScene(groupToRemove: Group){
@@ -30,4 +30,21 @@ export function disposeMaterial(material: Material): void {
     }
 
     material.dispose();
+}
+
+
+export function updateOrbitControls(mode: '2D' | '3D'){
+    if(mode === '2D'){
+        three.controls.enableRotate = false;
+        three.controls.mouseButtons = {
+            LEFT: MOUSE.PAN
+        }
+    }else{
+        three.controls.enableRotate = true;
+        three.controls.mouseButtons = {
+            LEFT: MOUSE.ROTATE,
+            MIDDLE: MOUSE.DOLLY,
+            RIGHT: MOUSE.PAN
+        }
+    }
 }

@@ -18,6 +18,8 @@ export type Mode = '2D' | '3D';
 export interface State{
     mode: Mode,
     isDragging : boolean,
+    canRotate : boolean,
+    isRotating : boolean,
     isAddingNewProp: boolean,
     isActionsPanelActive : boolean,
     timerStart : number

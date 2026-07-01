@@ -1,11 +1,14 @@
 import * as THREE from 'three';
-import { room, sizes, state, three } from '../../store/globalState';
-import { s } from '../../store/roomState';
+import { panels, room, sizes, state, three } from '../../store/globalState';
+import { r, s } from '../../store/roomState';
 import { v7 } from "uuid";
 import type { CollisionBox } from '../../types/types';
 import { gltfLoader } from '../../store/loaders';
 import { addHoverGlow } from './outline';
 import { removeGroupFromScene } from './threeHelpers';
+import { checkClick } from '../helpers';
+import { handleClick } from './click-editing';
+import { checkRotation, rotateProp } from './rotation';
 
 
 const lastActivePropPosition = new THREE.Vector3();
@@ -17,18 +20,19 @@ let grabOffset : THREE.Vector3 = new THREE.Vector3();
 
 let collisionBoxes : CollisionBox[] = [];
 
-let propsOnSurface : THREE.Mesh[] = [];
+let propsOnSurface : THREE.Group[] = [];
 let collisionCheckProps : (THREE.Mesh | THREE.Group)[] = [];
 let isMovingSurface : boolean = false;
 
 let isSurface: boolean = false;
 
 
+
 /**
  * Populate prop items on the Props Panel
  */
 export function populatePropItems(){
-    room.panelItems = Array.from(document.querySelectorAll('.panel-item')) as HTMLElement[];    
+    room.panelItems = Array.from(panels.propsPanel.querySelectorAll('.panel-item')) as HTMLElement[];    
     room.panelItems.forEach(panelItem => {
         panelItem.addEventListener('mousedown', async () => await initializeNewProp(panelItem));
     });
@@ -45,12 +49,6 @@ function updateCollisionProps(){
 
     // Moving/adding a prop >> collisions for all the items except the prop itself and the surface is being dragged on
     if(isMovingSurface === false){
-        console.log('active ID: ', s.propToMove?.userData);
-        
-        [...room.props, ...room.surfaces].forEach(element => {
-            console.log(element.userData.id);
-        });
-
         collisionCheckProps = [...room.props, ...room.surfaces].filter(item => 
             item.userData.id !== s.propToMove?.userData.id &&
             item.userData.id !== s.activeSurface?.userData.id
@@ -80,14 +78,15 @@ function updateCollisionProps(){
         const remainingBoxes : CollisionBox[] = [];
         
         collisionBoxes.forEach(collisionBox => {
-        const isOnTop = s.propToMoveBBox.max.x > collisionBox.bbox.max.x &&
-            s.propToMoveBBox.min.x < collisionBox.bbox.min.x &&
-            s.propToMoveBBox.max.z > collisionBox.bbox.max.z &&
-            s.propToMoveBBox.min.z < collisionBox.bbox.min.z
-
-            if (s.propToMoveBBox.intersectsBox(collisionBox.bbox) && isOnTop) {
-                const item = getMeshByUserDataValue('id', collisionBox.propId);
-                if (item && (item as THREE.Mesh).userData.isSurface === false) {
+            const isOnTop = s.propToMoveBBox.max.x > collisionBox.bbox.max.x &&
+                s.propToMoveBBox.min.x < collisionBox.bbox.min.x &&
+                s.propToMoveBBox.max.z > collisionBox.bbox.max.z &&
+                s.propToMoveBBox.min.z < collisionBox.bbox.min.z;
+            
+            if (isOnTop) {
+                const item = getModelByUserDataValue('id', collisionBox.propId);
+                
+                if (item && item.userData.isSurface === false) {
                     propsOnSurface.push(item);
                 }
             } else {
@@ -97,9 +96,6 @@ function updateCollisionProps(){
 
         collisionBoxes = remainingBoxes;
     }
-
-    console.log(three.scene.children);
-    // console.log(room.props);
 }
 
 
@@ -117,6 +113,11 @@ async function initializeNewProp(panelItem : HTMLElement){
     const modelPath = `/models/${panelItem.dataset.model}.glb`;
     const model = await gltfLoader.loadAsync(modelPath);
     const newProp = model.scene;
+
+    newProp.traverse((child) => {
+        child.castShadow = true;
+    });
+    // newProp.castShadow = true;
     s.propToMove = newProp;
 
     // Check if the new prop is a surface (table, shelf, etc...)
@@ -148,18 +149,16 @@ async function initializeNewProp(panelItem : HTMLElement){
  * 
  * @param name : string > key of the userData to check
  * @param value : any > value of the key to check
- * @returns mesh : Mesh > return match if found, or null if not
+ * @returns model : THREE.Group > return match if found, or null if not
  */
-const getMeshByUserDataValue = (name : string, value : any) : THREE.Mesh | null => {
-    let mesh : THREE.Mesh | null = null;
+const getModelByUserDataValue = (name : string, value : any) : THREE.Group | null => {
+    let model : THREE.Group | null = null;
 
-    three.scene.traverse((node) => {
-        if (node.userData[name] === value) {
-            mesh = node as THREE.Mesh;
-        }
+    room.props.forEach(prop => {
+        if(prop.userData[name] === value) model = prop;
     });
 
-    return mesh;
+    return model;
 };
 
 
@@ -206,6 +205,14 @@ export function clickProp(event: MouseEvent){
         // if the drop position is invalid
         lastActivePropPosition.copy(s.propToMove.position);
 
+        if(state.canRotate){
+            r.startRotation = s.propToMove.rotation.y;
+            r.startX = event.clientX;
+            state.isRotating = true;
+        } 
+
+        if(state.isRotating) return;
+
         document.body.style.cursor = 'grab';
 
         const surfacesIntersection = three.raycaster.intersectObjects(surfacesToDrag);
@@ -242,11 +249,19 @@ export function mouseMove3d(event: MouseEvent){
 
     if(event.target !== three.renderer.domElement) return;
 
+    if(!state.isRotating) checkRotation(event);
+
     addHoverGlow(event);
 
-    if(!s.propToMove) return
+    if(!s.propToMove) return;
+
+    if(state.canRotate){
+        rotateProp(event); 
+        return
+    } 
 
     s.hit = false;
+    state.isDragging = true;
 
     const previousPosition : THREE.Vector3 = s.propToMove.position.clone();
 
@@ -351,6 +366,16 @@ export function mouseMove3d(event: MouseEvent){
 
 
 
+export function mouseUp3d(event : MouseEvent){
+    const isClick = checkClick();
+
+    if(isClick) handleClick(event);
+
+    releaseProp();
+}
+
+
+
 /**
  * 
  * Release prop at the new position if it's valid
@@ -359,7 +384,7 @@ export function mouseMove3d(event: MouseEvent){
  * Otherwise remove it and dispose the geometries and materials
  */
 export function releaseProp(){
-    if(!s.propToMove) return;
+    if(!s.propToMove || !state.isDragging) return;
 
     if(s.hit){
         if(state.isAddingNewProp) removeGroupFromScene(s.propToMove as THREE.Group);
@@ -383,4 +408,6 @@ export function releaseProp(){
     isSurface = false;
     three.controls.enabled = true;
     s.isNewPropAdded = false;
+    state.canRotate = false;
+    state.isRotating = false;
 }
